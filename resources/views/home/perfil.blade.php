@@ -73,14 +73,18 @@
                 <button class="btn btn-secondary" id="voltar" onclick="window.location.href='{{ route('home') }}'">
                     <i class="fas fa-arrow-left"></i> Voltar
                 </button>
-                
+
+                <button class="btn btn-secondary" id="logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+
                 <button class="btn btn-primary" id="save" style="display: none;" onclick="updateUsuario()">
                     <i class="fas fa-save"></i> Salvar
                 </button>
             </div>
         </div>
     </footer>
-    
+
     <div class="logo">
         <img src="{{ asset('images/Emporio maxx s-fundo.png') }}" alt="Empório Maxx Logo">
     </div>
@@ -89,7 +93,7 @@
         function togglePasswordVisibility(id) {
             var passwordField = document.getElementById(id);
             var icon = document.querySelector('.toggle-visibility i');
-            
+
             if (passwordField.type === "password") {
                 passwordField.type = "text";
                 icon.classList.remove('fa-eye-slash');
@@ -112,37 +116,37 @@
         async function updateUsuario() {
             // Get the CSRF token
             const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            
+
             // Obtém os valores dos campos do formulário
             const nome = document.getElementById('nome').value.trim();
             const sobrenome = document.getElementById('sobrenome').value.trim();
             const login = document.getElementById('login').value.trim();
             const senha = document.getElementById('senha').value.trim();
-            
+
             // Validações básicas
             if (!nome) {
                 mostrarErro('O nome é obrigatório');
                 return;
             }
-            
+
             if (!login) {
                 mostrarErro('O login (email) é obrigatório');
                 return;
             }
-            
+
             // Validar formato de email
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(login)) {
                 mostrarErro('Por favor, insira um email válido');
                 return;
             }
-            
+
             // Exibir indicador de carregamento
             const btnSalvar = document.getElementById('save');
             const originalBtnText = btnSalvar.innerHTML;
             btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
             btnSalvar.disabled = true;
-        
+
             try {
                 // Envia uma requisição fetch para atualizar o perfil
                 const response = await fetch('{{ route("menu.perfil.atualizar-perfil") }}', {
@@ -151,16 +155,16 @@
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': token
                     },
-                    body: JSON.stringify({ 
-                        nome: nome, 
-                        sobrenome: sobrenome, 
-                        login: login, 
-                        senha: senha 
+                    body: JSON.stringify({
+                        nome: nome,
+                        sobrenome: sobrenome,
+                        login: login,
+                        senha: senha
                     })
                 });
-        
+
                 const data = await response.json();
-        
+
                 if (data.status === 'success') {
                     mostrarSucesso(data.mensagem || 'Perfil atualizado com sucesso!');
                     // Desabilitar campos após salvamento
@@ -187,21 +191,41 @@
             mensagemSucesso.textContent = mensagem;
             mensagemSucesso.style.display = 'block';
             document.getElementById('mensagemErro').style.display = 'none';
-            
+
             setTimeout(() => {
                 mensagemSucesso.style.display = 'none';
             }, 4000);
         }
-        
+
         function mostrarErro(mensagem) {
             const mensagemErro = document.getElementById('mensagemErro');
             mensagemErro.textContent = mensagem;
             mensagemErro.style.display = 'block';
             document.getElementById('mensagemSucesso').style.display = 'none';
-            
+
             setTimeout(() => {
                 mensagemErro.style.display = 'none';
             }, 4000);
+        }
+
+        function logout() {
+            if (confirm('Tem certeza que deseja sair da aplicação?')) {
+                // Cria um formulário temporário para enviar requisição POST
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route("logout") }}';
+
+                // Adiciona o token CSRF
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                form.appendChild(csrfToken);
+
+                // Adiciona o formulário ao body e submete
+                document.body.appendChild(form);
+                form.submit();
+            }
         }
     </script>
 </body>
