@@ -1,6 +1,5 @@
-const CACHE_NAME = 'morpheus-cache-v1';
+const CACHE_NAME = 'morpheus-cache-v2';
 const STATIC_ASSETS = [
-  '/',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/manifest.webmanifest',
@@ -14,7 +13,7 @@ const urlsToCache = [
 ];
 
 // Cache dinâmico com nome separado
-const DYNAMIC_CACHE = 'morpheus-dynamic-v2';
+const DYNAMIC_CACHE = 'morpheus-dynamic-v3';
 
 // Instalação: cache básico estático
 self.addEventListener('install', event => {
@@ -38,9 +37,13 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Intercepta todas as requisições
+// Intercepta as requisições (só GET; a Cache API não suporta outros métodos)
 self.addEventListener('fetch', event => {
   const { request } = event;
+
+  if (request.method !== 'GET') {
+    return;
+  }
 
   // Cache-first para arquivos estáticos
   if (STATIC_ASSETS.includes(new URL(request.url).pathname)) {

@@ -25,68 +25,38 @@ class LoginController extends Controller
             'senha' => 'required|string',
         ]);
 
-        // Log para debug
-        Log::info('Tentativa de login para usuário: ' . $credentials['login']);
-
         // Buscar o usuário pelo nome de usuário OU email
         $user = DB::table('usuarios')
             ->where('nome_Usuario', $credentials['login'])
             ->orWhere('email', $credentials['login'])
             ->first();
 
-        if (!$user) {
-            Log::info('Usuário não encontrado');
+        if (!$user || !Hash::check($credentials['senha'], $user->senha)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Login ou senha inválidos'
             ]);
         }
 
-        // Log para debug - para verificar senha no banco
-        Log::info('Usuário encontrado: ' . $user->nome_Usuario);
-        Log::info('Tipo de senha no banco: ' . (strlen($user->senha) <= 6 ? 'Texto plano' : 'Hash'));
-        
-        // Verificação direta para senhas não hashadas (4 dígitos)
-        if (strlen($user->senha) <= 6) {
-            Log::info('Verificando senha em texto plano');
-            $authenticated = ($credentials['senha'] === $user->senha);
+        // Criar um objeto User para autenticação do Laravel
+        $userModel = User::where('id_Usuario', $user->id_Usuario)->first();
+
+        // Se o usuário existir no modelo, faz o login via Auth
+        if ($userModel) {
+            Auth::login($userModel);
         } else {
-            // Verificação com Hash::check para senhas hashadas
-            Log::info('Verificando senha hashada');
-            $authenticated = Hash::check($credentials['senha'], $user->senha);
+            Log::warning('Não foi possível fazer login via Auth, apenas via sessão');
         }
 
-        if ($authenticated) {
-            Log::info('Autenticação bem-sucedida');
-            
-            // Criar um objeto User para autenticação do Laravel
-            $userModel = User::where('id_Usuario', $user->id_Usuario)->first();
-            
-            // Se o usuário existir no modelo, faz o login via Auth
-            if ($userModel) {
-                Auth::login($userModel);
-                Log::info('Login via Auth realizado com sucesso');
-            } else {
-                Log::warning('Não foi possível fazer login via Auth, apenas via sessão');
-            }
-            
-            // Armazenar informações do usuário na sessão (como backup)
-            session([
-                'logged_in' => true,
-                'user_id' => $user->id_Usuario,
-                'user_type' => $user->tipo_Usuario,
-                'user_name' => $user->nome_Usuario
-            ]);
-            
-            return response()->json(['status' => 'success']);
-        }
-        
-        Log::info('Senha incorreta');
-        // Autenticação falhou
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Login ou senha inválidos'
+        // Armazenar informações do usuário na sessão (como backup)
+        session([
+            'logged_in' => true,
+            'user_id' => $user->id_Usuario,
+            'user_type' => $user->tipo_Usuario,
+            'user_name' => $user->nome_Usuario
         ]);
+
+        return response()->json(['status' => 'success']);
     }
     
     /**

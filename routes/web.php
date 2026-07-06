@@ -23,7 +23,7 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
-Route::post('/login', [LoginController::class, 'authenticate'])->name('login.post');
+Route::post('/login', [LoginController::class, 'authenticate'])->middleware('throttle:5,1')->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Rotas de redefinição de senha
@@ -43,8 +43,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/atualizar', [PerfilController::class, 'update'])->name('menu.perfil.atualizar-perfil');
     });
     
-    // Usuários
-    Route::prefix('usuarios')->group(function () {
+    // Usuários (restrito a admin)
+    Route::prefix('usuarios')->middleware('admin')->group(function () {
         Route::get('/', [UsuarioController::class, 'index'])->name('menu.usuarios.usuarios');
         Route::post('/store', [UsuarioController::class, 'store'])->name('menu.usuarios.store');
         Route::get('/buscar', [UsuarioController::class, 'showBuscar'])->name('menu.usuarios.usuarios-buscar');
@@ -53,8 +53,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/update', [UsuarioController::class, 'update'])->name('menu.usuarios.usuarios-update');
     });
     
-    // Fornecedor
-    Route::prefix('fornecedor')->group(function () {
+    // Fornecedor (restrito a admin)
+    Route::prefix('fornecedor')->middleware('admin')->group(function () {
         Route::get('/', [FornecedorController::class, 'index'])->name('menu.fornecedor.fornecedor');
         Route::post('/store', [FornecedorController::class, 'store'])->name('menu.fornecedor.store');
         Route::get('/buscar', [FornecedorController::class, 'showBuscar'])->name('menu.fornecedor.fornecedor-buscar');
@@ -64,8 +64,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/find', [FornecedorController::class, 'find'])->name('menu.fornecedor.find');
     });
 
-    // Local de Destino
-    Route::prefix('local-destino')->group(function () {
+    // Local de Destino (restrito a admin)
+    Route::prefix('local-destino')->middleware('admin')->group(function () {
         Route::get('/', [LocalDestinoController::class, 'index'])->name('menu.local-destino.local-destino');
         Route::get('/buscar', [LocalDestinoController::class, 'showBuscar'])->name('menu.local-destino.local-destino-buscar');
         Route::get('/editar', [LocalDestinoController::class, 'showEditar'])->name('menu.local-destino.local-destino-editar');
@@ -76,8 +76,8 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/delete/{id}', [LocalDestinoController::class, 'destroy']);
     });
     
-    // Produtos
-    Route::prefix('produtos')->group(function () {
+    // Produtos (restrito a admin)
+    Route::prefix('produtos')->middleware('admin')->group(function () {
         Route::get('/', [ProdutoController::class, 'index'])->name('menu.produtos.produtos');
         Route::post('/store', [ProdutoController::class, 'store'])->name('produto.store');
         Route::get('/buscar', [ProdutoController::class, 'showBuscar'])->name('menu.produtos.produtos-buscar');

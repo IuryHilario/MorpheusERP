@@ -67,7 +67,7 @@ class Usuario extends Model
      */
     public function setSenhaAttribute($value)
     {
-        if (!empty($value) && !Hash::needsRehash($value)) {
+        if (!empty($value) && substr($value, 0, 4) !== '$2y$') {
             $this->attributes['senha'] = Hash::make($value);
         } else {
             $this->attributes['senha'] = $value;

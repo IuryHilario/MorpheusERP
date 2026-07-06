@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Menu;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class PerfilController extends Controller
 {
@@ -64,7 +65,7 @@ class PerfilController extends Controller
             
             // Only update password if provided
             if (!empty($validated['senha'])) {
-                $updateData['senha'] = $validated['senha'];
+                $updateData['senha'] = Hash::make($validated['senha']);
             }
             
             // Update the user record
